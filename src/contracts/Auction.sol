@@ -18,7 +18,7 @@ contract Auction{
     // Constructor
     constructor(address _owner, uint _startBlock, uint _endBlock, string memory _ipfs, uint _initialPrice, uint _minBidInc) public {
         require(_startBlock < _endBlock, "El bloque final debe ser mayor que el bloque final.");
-        //require(_startBlock >= block.number, "El bloque inicial debe ser mayor o igual al bloque actual.");
+        require(_startBlock >= block.number, "El bloque inicial debe ser mayor o igual al bloque actual.");
         require(_owner != address(0), "El propietario proporcionado no es válido.");
 
         owner = _owner;

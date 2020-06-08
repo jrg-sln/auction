@@ -1,72 +1,70 @@
 import React, { Component } from 'react';
-import logo from '../logo.png';
 import Web3 from 'web3';
 //import Auction from '../abis/Auction.json'
-import AuctionFactory from '../abis/AuctionFactory.json'
+//import AuctionFactory from '../abis/AuctionFactory.json'
 import Navbar from './Navbar'
 import Main from './Main'
+import LoadAuction from './LoadAuction'
 import './App.css';
+import logo from '../images/DAJ-logo.png';
 
 class App extends Component {
-
-  async componentWillMount(){
-    await this.loadWeb3()
-    await this.loadBlockchainData()
-  }
-
-  async loadBlockchainData(){
-    const web3 = window.web3
-
-    const accounts = await web3.eth.getAccounts()
-    this.setState({account: accounts[0]})
-    const ethBalance = await web3.eth.getBalance(this.state.account)
-    this.setState({ethBalance: ethBalance})
-    
-    const networkID = await web3.eth.net.getId()
-    const auctionFacNet = AuctionFactory.networks[networkID]
-    if (auctionFacNet){
-      const auctionFac = new web3.eth.Contract(AuctionFactory.abi, auctionFacNet.address)
-      this.setState({auctionFac: auctionFac})
-      let lots = await auctionFac.methods.getAllAuctions().call()
-      this.setState({lots: lots})
-    } else {
-      window.alert('Contract not deployed to detected network.')
-    }
-
-    this.setState({loading: false})
-  }
-
-  async loadWeb3(){
-    if(window.ethereum){
-      window.web3 = new Web3(window.ethereum)
-      await window.ethereum.enable()
-    } else {
-      if (window.web3){
-        window.web3 = new Web3(window.web3.currentProvider)
-      } else {
-        window.alert("Non ethereum browser detect!")
-      }
-    }
-  }
 
   constructor (props){
     super(props)
     this.state = {
+      web3: null,
       account: '',
       ethBalance: '0',
-      auctionFac: {},
-      loading: true
+      auctions: [],
+      auctionListItems: '',
+      page: 0
     }
-    //this.handleChange = this.handleChange.bind(this)
-    //this.handleSubmit = this.handleSubmit.bind(this)
+    this.renderItems = React.createRef();
+  }
+
+  async componentWillMount(){
+    this.loadBlockchainData()
+  }
+
+  async loadBlockchainData() {
+    const web3 = new Web3(Web3.givenProvider || "http://localhost:7545")
+    this.setState({web3})
+    const accounts = await web3.eth.getAccounts()
+    this.setState({ account: accounts[0] })
+    const ethBalance = await web3.eth.getBalance(this.state.account)
+    this.setState({ethBalance: ethBalance})
+    this.setState({page: 1})
+
+    /*const auctionFactory = new web3.eth.Contract(AuctionFactory.abi, '0x805CBde0bb7A00a590deAef43602964411AB479F')
+    this.setState({ auctionFactory })
+    const auctions = await auctionFactory.methods.getAllAuctions().call()
+    this.setState({ auctions })
+    let auctionListItems = ''
+    //var auctionResults = this.renderItems.current;
+    for (var i = 0; i < auctions.length; i++) {
+      let auction = await new web3.eth.Contract(Auction.abi, auctions[i])
+      let initialPrice = await auction.methods.initialPrice().call()
+      let ipfsHash = await auction.methods.ipfsHash().call()
+      let minimumBidIncrement = await auction.methods.minimumBidIncrement().call()
+      auctionListItems += '<tr><td>'+(i+1)+'</td><td>'+initialPrice+'</td><td>'+minimumBidIncrement+'</td><td><img width=70 height=70 src="images/' + ipfsHash + '"/></td></tr>'
+      //auctionResults.append(auctionListItems);
+    }
+    this.setState({auctionListItems})*/
   }
 
   render() {
     let content
-    if(this.state.loading){
+    if(this.state.page === 0){
       content = <p id="loader" className="text-center">Loading...</p>
     } else {
-      content = <Main ethBalance={this.state.ethBalance}/>
+      if(this.state.page === 1){
+        content = <Main ethBalance={this.state.ethBalance} account={this.state.account}/>
+      } else {
+        if(this.state.page === 2){
+          content = <LoadAuction account={this.state.account}/>
+        }
+      }
     }
     return (
       <div>
@@ -87,11 +85,3 @@ class App extends Component {
 }
 
 export default App;
-
-/*
-<a href="#" rel="noopener noreferrer" >
-                  <img src={logo} className="App-logo" alt="logo" />
-                </a>
-
-                
-*/

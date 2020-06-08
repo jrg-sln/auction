@@ -9,13 +9,13 @@ contract AuctionFactory{
     );
 
     constructor() public {
-        createAuction(160, 200, 'NES.jpg', 500, 10);
-        createAuction(102, 200, 'baseball_ball.jpg', 1500, 50);
-        createAuction(102, 200, 'bicycle.jpg', 2500, 100);
+        createAuction('NES.jpg', 500, 10);
+        createAuction('baseball_ball.jpg', 1500, 50);
+        createAuction('bicycle.jpg', 2500, 100);
     }
 
-    function createAuction(uint _startBlock, uint _endBlock, string memory _ipfs, uint _initialPrice, uint _minBidInc) public {
-        Auction newAuction = new Auction(msg.sender, _startBlock, _endBlock, _ipfs, _initialPrice, _minBidInc);
+    function createAuction(string memory _ipfs, uint _initialPrice, uint _minBidInc) public {
+        Auction newAuction = new Auction(msg.sender, block.number, block.number+50, _ipfs, _initialPrice, _minBidInc);
         auctions.push(address(newAuction));
         emit AuctionCreated(address(newAuction), msg.sender);
     }
