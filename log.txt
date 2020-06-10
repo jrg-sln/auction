@@ -2,7 +2,7 @@ AuctionFactory.deployed().then(function(instance){auctionFactory = instance})
 auctionFactory.getAllAuctions().then(function(a){auctions=a})
 auction0 = await Auction.at(auctions[0])
 
-
+Auction.deployed().then(function(instance){auction = instance})
 
 https://www.youtube.com/watch?v=SkMH0WeRYtg
 ######################## IPFS ########################

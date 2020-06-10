@@ -1,72 +1,142 @@
 import React, { Component } from 'react'
-import Web3 from 'web3';
 import Auction from '../abis/Auction.json'
 import AuctionFactory from '../abis/AuctionFactory.json'
+import ethlogo from '../images/eth-logo.png';
 
 class Main extends Component {
 
   constructor (props){
     super(props)
     this.state = {
-      web3: null,
-      account: '',
-      ethBalance: '0',
+      accounts: [],
+      currentAccount: '',
       auctions: [],
       auctionList: [],
+      Auction: null,
+      AuctionFactoryContract: null,
+      AuctionContract: null,
+      blockNumber: 0,
       page: 0
     }
-    this.renderItems = React.createRef();
+    this.onChangeAccount = this.onChangeAccount.bind(this)
+    //this.onClickCreateAuction = this.onClickCreateAuction.bind(this)
+    this.getAllAuctions = this.getAllAuctions.bind(this)
+    this.getAuction = this.getAuction.bind(this)
+    //this.cancelAuction = this.cancelAuction.bind(this)
+    this.getAccountBids = this.getAccountBids.bind(this)
+    //this.onLogBid = this.onLogBid.bind(this)
   }
 
-  async componentWillMount(){
-    this.loadBlockchainData()
+  async componentDidMount(){
+    let afc = await new this.props.web3.eth.Contract(AuctionFactory.abi, '0x4b6a2089FeA993d871489d5faf237EC0baD2d25A')
+    afc.setProvider(this.props.web3.currentProvider)
+    let ac = await new this.props.web3.eth.Contract(Auction.abi, '0xf3Aae26a50cA58fAaB25BE3d85836F6aEaA47920')
+    ac.setProvider(this.props.web3.currentProvider)
+    this.setState({ AuctionFactoryContract: afc })
+    this.setState({ AuctionContract: ac })
+    const bn = await this.props.web3.eth.getBlockNumber()
+    this.setState({blockNumber: bn})
+
+    this.getAllAuctions().then(_ => {
+      this.props.web3.eth.getAccounts((err, accounts) => {
+        this.setState({ accounts })
+      }).then(_ => {
+        this.setCurrentAccount(this.state.accounts[0])
+      })
+    })
+
+    /*AuctionFactory.deployed().AuctionCreated({ fromBlock: 0, toBlock: 'latest' }).watch((err, resp) => {
+      console.log('AuctionCreated', err, resp)
+      this.getAllAuctions()
+    })*/
   }
 
-  async loadBlockchainData() {
-    const web3 = new Web3(Web3.givenProvider || "http://localhost:7545")
-    this.setState({web3})
-    const accounts = await web3.eth.getAccounts()
-    this.setState({ account: accounts[0] })
-    const ethBalance = await web3.eth.getBalance(this.state.account)
-    this.setState({ethBalance: ethBalance})
-    this.setState({page: 2})
+  onChangeAccount(evt) {
+    this.setCurrentAccount(evt.target.value)
+  }
 
-    const auctionFactory = new web3.eth.Contract(AuctionFactory.abi, '0x805CBde0bb7A00a590deAef43602964411AB479F')
-    this.setState({ auctionFactory })
-    const auctions = await auctionFactory.methods.getAllAuctions().call()
-    this.setState({ auctions })
-    //var auctionResults = this.renderItems.current;
-    /*for (var i = 0; i < auctions.length; i++) {
-      newFile = this.state.files.map((file) => {
-        return {getAuction(auctions[i])};
-      });
-    
-      let auction = await new web3.eth.Contract(Auction.abi, auctions[i])
-      let initialPrice = await auction.methods.initialPrice().call()
-      let ipfsHash = await auction.methods.ipfsHash().call()
-      let minimumBidIncrement = await auction.methods.minimumBidIncrement().call()
-      auctionListItems += '<tr><td>'+(i+1)+'</td><td>'+initialPrice+'</td><td>'+minimumBidIncrement+'</td><td><img width=70 height=70 src="images/' + ipfsHash + '"/></td></tr>'
-      auctionResults.append(auctionListItems);
-    }*/
-    //this.setState({auctionListItems})
-    let auctionList = await auctions.map(auctionAddr => this.getAuction(auctionAddr))
-    this.setState({ auctionList })
+  setCurrentAccount(account) {
+    this.props.web3.eth.defaultAccount = account
+
+    this.getAccountBids(account).then(currentAccountBids => {
+      this.setState({
+        currentAccount: account,
+        //currentAccountBalance: this.props.web3.utils.fromWei(this.props.web3.eth.getBalance(account), 'ether').toString(),
+        currentAccountBids,
+      })
+    })
+  }
+
+  async getAccountBids(account) {
+    console.log(account)
+    const getBidPromises = this.state.auctions.map(auction => {
+      //this.state.AuctionContract.methods.getFundsByBidder(account).call().then(function(res){console.log(res)})
+      return this.state.AuctionContract.methods.getFundsByBidder(account).call().then(bid => {
+        return { auction: auction.address, bid }
+      })
+    })
+
+    return Promise.all(getBidPromises).then(results => {
+      let currentAccountBids = {}
+      for (let x of results) {
+        currentAccountBids[x.auction] = this.props.web3.utils.fromWei(x.bid.toString(), 'ether').toString()
+      }
+      return currentAccountBids
+    })
+  }
+
+  async getAllAuctions() {
+    return new Promise((resolve, reject) => {
+      return this.state.AuctionFactoryContract.methods.getAllAuctions().call().then(result => {
+        return Promise.all( result.map(auctionAddr => this.getAuction(auctionAddr)) )
+      }).then(auctions => {
+
+        /*let auctionEventListeners = Object.assign({}, this.state.auctionEventListeners)
+        const unloggedAuctions = auctions.filter(auction => this.state.auctionEventListeners[auction.address] === undefined)
+        for (let auction of unloggedAuctions) {
+          auctionEventListeners[auction.address] = auction.contract.LogBid({ fromBlock: 0, toBlock: 'latest' })
+          auctionEventListeners[auction.address].watch(this.onLogBid)
+        }*/
+
+        //this.setState({ auctions, auctionEventListeners }, resolve)
+        this.setState({ auctions }, resolve)
+      })
+    })
   }
 
   async getAuction(auctionAddr) {
-    const auction = await new this.state.web3.eth.Contract(Auction.abi, auctionAddr)
-    const owner = auction.methods.owner.call()
-    const startBlock = auction.methods.startBlock.call()
-    const endBlock = auction.methods.endBlock.call()
-    const ipfsHash = auction.methods.ipfsHash.call()
-    //const minimumBidIncrement = auction.methods.minimumBidIncrement.call()
-    //const highestBid = auction.methods.highestBid.call()
-    //const highestBindingBid = auction.methods.highestBindingBid.call()
-    const highestBidder = auction.methods.highestBidder.call()
-    const canceled = auction.methods.canceled.call()
+    let auction = new this.props.web3.eth.Contract(Auction.abi, auctionAddr)
 
-    return Promise.allSettled([ owner, startBlock, endBlock, ipfsHash, highestBidder, canceled ]).then(vals => {
-      const [ owner, startBlock, endBlock, ipfsHash, highestBidder, canceled ] = vals
+    let owner = await auction.methods.owner.call().then(function(result){
+      return result
+    })
+    const startBlock = await auction.methods.startBlock.call().then(function(result){
+      return result
+    })
+    const endBlock = await auction.methods.endBlock.call().then(function(result){
+      return result
+    })
+    const ipfsHash = await auction.methods.ipfsHash.call().then(function(result){
+      return result
+    })
+    const initialPrice = await auction.methods.initialPrice.call().then(function(result){
+      return result
+    })
+    const minimumBidIncrement = await auction.methods.minimumBidIncrement.call().then(function(result){
+      return result
+    })
+    const canceled = await auction.methods.canceled.call().then(function(result){
+      return result
+    })
+    const highestBid = await auction.methods.highestBid.call().then(function(result){
+      return result
+    })
+    const highestBidder = await auction.methods.highestBidder.call().then(function(result){
+      return result
+    })
+
+    return Promise.all([owner, startBlock, endBlock, ipfsHash, initialPrice, minimumBidIncrement, canceled, highestBid, highestBidder]).then(vals => {
+      const [owner, startBlock, endBlock, ipfsHash, initialPrice, minimumBidIncrement, canceled, highestBid, highestBidder] = vals
       return {
         contract: auction,
         address: auctionAddr,
@@ -74,10 +144,11 @@ class Main extends Component {
         startBlock: startBlock.toString(),
         endBlock: endBlock.toString(),
         ipfsHash: ipfsHash.toString(),
-        //minimumBidIncrement: this.state.web3.utils.fromWei(minimumBidIncrement.toString(), 'ether').toString(),
-        //highestBid: this.state.web3.utils.fromWei(highestBid.toString(), 'ether').toString(),
-        highestBidder: highestBidder,
+        initialPrice: initialPrice.toString(),
+        minimumBidIncrement: this.props.web3.utils.fromWei(minimumBidIncrement.toString(), 'ether').toString(),
         canceled: canceled,
+        highestBid: this.props.web3.utils.fromWei(highestBid.toString(), 'ether').toString(),
+        highestBidder: highestBidder
       }
     }).catch(err => console.log('error', err))
   }
@@ -87,27 +158,55 @@ class Main extends Component {
       <div id="content">
         <h1>Auction</h1>
         <div id="content">
+        <p>Bloque actual {this.state.blockNumber}</p>
           <table className="table">
             <thead>
               <tr>
-                <th scope="col">Address</th>
-                <th scope="col">Initial block</th>
-                <th scope="col">End block</th>
-                <th scope="col">Minimum bid increment</th>
-                <th scope="col">Image</th>
+                <th>Lote</th>
+                <th>Bloque inicial</th>
+                <th>Bloque final</th>
+                <th>Incremento m&iacute;nimo</th>
+                <th>Puja m&aacute;s alta</th>
+                <th>Your bid</th>
+                <th>Status</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody id="auctionResults">
-              {this.state.auctionList.map(auction => {
-                let status = 'Running'
+              {this.state.auctions.map(auction => {
+                let status = 'Activa'
+                if (auction.canceled) {
+                  status = 'Cancelada'
+                } else {
+                  if (this.state.blockNumber > auction.endBlock) {
+                    status = 'Finalizada'
+                  } else {
+                    if (this.state.blockNumber < auction.startBlock) {
+                      status = 'Por iniciar'
+                    }
+                  }
+                }
+                let highestBidder='-'
+                if (auction.highestBidder!=='0x0000000000000000000000000000000000000000'){
+                    highestBidder = auction.highestBidder.substr(0, 6) + ": " + auction.highestBid
+                }
                 return (
                   <tr key={auction.address}>
-                    <td>{auction.address}</td>
+                    <td>
+                      {auction.address.substr(0, 6)}<br/>
+                      <img src={`https://ipfs.io/ipfs/${auction.ipfsHash}`} className="img-thumbnail" width="50" height="50" alt="" />
+                    </td>
                     <td>{auction.startBlock}</td>
                     <td>{auction.endBlock}</td>
-                    <td>{auction.highestBidder}</td>
+                    <td>{auction.minimumBidIncrement} [Ether] 
+                    <img src={ethlogo} width="20" height="30" alt="eth logo" /></td>
                     <td>
-                      {auction.owner === this.props.account && (status === 'Running' || status === 'Unstarted') &&
+                      {highestBidder} [Ether] <img src={ethlogo} width="20" height="30" alt="eth logo" />
+                    </td>
+                    <td>--</td>
+                    <td>{status}</td>
+                    <td>
+                      {auction.owner === this.state.currentAccount && (status === 'Activa' || status === 'Por iniciar') &&
                         <button onClick={() => this.cancelAuction(auction)}>Cancel</button>
                       }
                       <div>
@@ -121,7 +220,7 @@ class Main extends Component {
             </tbody>
           </table>
           <hr />
-          <p>Balance: {this.state.web3.utils.fromWei(this.state.ethBalance, 'Ether')}</p>
+          <p>Balance: {this.props.web3.utils.fromWei(this.props.ethBalance, 'Ether')} [Ether] <img src={ethlogo} width="20" height="30" alt="eth logo" /></p>
         </div>
       </div>
     );
@@ -129,38 +228,3 @@ class Main extends Component {
 }
 
 export default Main;
-
-/*
-              {this.state.auctionList.map(auction => {
-                let status = 'Running'
-                if (auction.canceled) {
-                  status = 'Canceled'
-                } else if (this.props.web3.eth.blockNumber > auction.endBlock) {
-                  status = 'Ended'
-                } else if (this.props.web3.eth.blockNumber < auction.startBlock) {
-                  status = 'Unstarted'
-                }
-                return (
-                  <tr key={auction.address}>
-                    <td>{auction.address.substr(0, 6)}</td>
-                    <td>{auction.startBlock}</td>
-                    <td>{auction.endBlock}</td>
-                    <td>{auction.bidIncrement} ETH</td>
-                    <td>{auction.highestBid} ETH</td>
-                    <td>{auction.highestBindingBid} ETH</td>
-                    <td>{auction.highestBidder.substr(0, 6)}</td>
-                    <td>{this.state.currentAccountBids[auction.address]}</td>
-                    <td>{status}</td>
-                    <td>
-                      {auction.owner == this.state.currentAccount && (status === 'Running' || status === 'Unstarted') &&
-                        <button onClick={() => this.cancelAuction(auction)}>Cancel</button>
-                      }
-                      <div>
-                        <input ref={x => this._inputBidAmount = x} />
-                        <button onClick={() => this.onClickBid(auction)}>Bid</button>
-                      </div>
-                    </td>
-                  </tr>
-                )
-              })}
-*/
