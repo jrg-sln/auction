@@ -21,8 +21,9 @@ class App extends Component {
   }
 
   async loadBlockchainData() {
-    var web3Location = `http://127.0.0.1:7545`
-    const web3 = new Web3(Web3.givenProvider || web3Location)
+    var web3Location = 'http://127.0.0.1:8545'
+    const web3Provider = new Web3.providers.HttpProvider(web3Location)
+    const web3 = new Web3(web3Provider)
     const accounts = await web3.eth.getAccounts()
     //const ethBalance = await web3.eth.getBalance(accounts[0])
     this.setState({ web3 })
