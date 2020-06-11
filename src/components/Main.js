@@ -167,35 +167,15 @@ class Main extends Component {
 
   async getAuction(auctionAddr) {
     let auction = new this.props.web3.eth.Contract(Auction.abi, auctionAddr)
-
-    let owner = await auction.methods.owner.call().then(function(result){
-      return result
-    })
-    const startBlock = await auction.methods.startBlock.call().then(function(result){
-      return result
-    })
-    const endBlock = await auction.methods.endBlock.call().then(function(result){
-      return result
-    })
-    const ipfsHash = await auction.methods.ipfsHash.call().then(function(result){
-      return result
-    })
-    const initialPrice = await auction.methods.initialPrice.call().then(function(result){
-      return result
-    })
-    const canceled = await auction.methods.canceled.call().then(function(result){
-      return result
-    })
-    const highestBid = await auction.methods.highestBid.call().then(function(result){
-      return result
-    })
-    const highestBidder = await auction.methods.highestBidder.call().then(function(result){
-      return result
-    })
-
-    return Promise.all([owner, startBlock, endBlock, ipfsHash, initialPrice, canceled, highestBid, highestBidder]).then(vals => {
-      const [owner, startBlock, endBlock, ipfsHash, initialPrice, canceled, highestBid, highestBidder] = vals
-      return {
+    let owner = await auction.methods.owner().call()
+    const startBlock = await auction.methods.startBlock().call()
+    const endBlock = await auction.methods.endBlock().call()
+    const ipfsHash = await auction.methods.ipfsHash().call()
+    const initialPrice = await auction.methods.initialPrice.call()
+    const canceled = await auction.methods.canceled().call()
+    const highestBid = await auction.methods.highestBid().call()
+    const highestBidder = await auction.methods.highestBidder().call()
+    return {
         contract: auction,
         address: auctionAddr,
         owner: owner,
@@ -206,8 +186,7 @@ class Main extends Component {
         canceled: canceled,
         highestBid: this.props.web3.utils.fromWei(highestBid.toString(), 'ether').toString(),
         highestBidder: highestBidder
-      }
-    }).catch(err => console.log('error', err))
+    }
   }
 
   render() {
