@@ -16,7 +16,7 @@ class App extends Component {
     }
   }
 
-  async componentWillMount(){
+  async componentDidMount(){
     this.loadBlockchainData()
   }
 
