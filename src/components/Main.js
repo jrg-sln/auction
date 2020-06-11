@@ -94,6 +94,15 @@ class Main extends Component {
     const bn = await this.props.web3.eth.getBlockNumber()
     this.setState({blockNumber: bn})
 
+//////////////////////////////////////
+// Código Dummy para crear subastas //
+//////////////////////////////////////
+    afc.methods.createAuction(1900,2200,'QmQYDXLwWdSjVxB1fQtUTv28QhUnYVhmpLPY1PjL5KjDo5',1500)
+          .send({from: "0xE08255E9f64AfA9D63c87ac3837dc7A6Ec30210d",
+                 gas: 6721975,
+                 gasPrice: 20000000000})
+
+
     this.getAllAuctions().then(_ => {
       this.props.web3.eth.getAccounts((err, accounts) => {
         this.setState({ accounts })
