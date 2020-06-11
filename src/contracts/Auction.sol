@@ -7,12 +7,11 @@ contract Auction{
     uint    public endBlock;
     string  public ipfsHash;
     uint    public initialPrice;
-    uint    public minimumBidIncrement;
     // Auction state
     bool    public canceled;
     uint    public highestBid;
     address public highestBidder;
-    mapping(address => uint256) public fundsByBidder;
+    mapping(address => uint256) fundsByBidder;
     bool    ownerHasWithdrawn;
 
     event LogBid(address bidder, uint bid, address highestBidder, uint highestBid, uint highestBindingBid);
@@ -20,7 +19,7 @@ contract Auction{
     event LogCanceled();
 
     // Constructor
-    constructor(address _owner, uint _startBlock, uint _endBlock, string memory _ipfs, uint _initialPrice, uint _minBidInc) public {
+    constructor(address _owner, uint _startBlock, uint _endBlock, string memory _ipfs, uint _initialPrice) public {
         require(_startBlock < _endBlock, "El bloque final debe ser mayor que el bloque final.");
         require(_startBlock >= block.number, "El bloque inicial debe ser mayor o igual al bloque actual.");
         require(_owner != address(0), "El propietario proporcionado no es válido.");
@@ -30,7 +29,6 @@ contract Auction{
         endBlock = _endBlock;
         ipfsHash = _ipfs;
         initialPrice = _initialPrice;
-        minimumBidIncrement = _minBidInc;
     }
 
     function getHighestBid() public view returns (uint) {

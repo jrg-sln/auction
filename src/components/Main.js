@@ -1,7 +1,13 @@
 import React, { Component } from 'react'
+import ipfs from './ipfs';
+
 import Auction from '../abis/Auction.json'
 import AuctionFactory from '../abis/AuctionFactory.json'
+
+import logo from '../images/DAJ-logo.png';
 import ethlogo from '../images/eth-logo.png';
+
+import Navbar from './Navbar'
 
 class Main extends Component {
 
@@ -9,28 +15,79 @@ class Main extends Component {
     super(props)
     this.state = {
       accounts: [],
-      currentAccount: '',
       auctions: [],
       auctionList: [],
       Auction: null,
       AuctionFactoryContract: null,
       AuctionContract: null,
+      auctionEventListeners: {},
       blockNumber: 0,
+      buffer: null,
+      currentAccount: '',
+      currentAccountBalance: 0,
+      currentAccountBids: {},
       page: 0
     }
-    this.onChangeAccount = this.onChangeAccount.bind(this)
-    //this.onClickCreateAuction = this.onClickCreateAuction.bind(this)
+    this.onClickCreateAuction = this.onClickCreateAuction.bind(this)
+    this.captureFile = this.captureFile.bind(this)
     this.getAllAuctions = this.getAllAuctions.bind(this)
     this.getAuction = this.getAuction.bind(this)
     //this.cancelAuction = this.cancelAuction.bind(this)
     this.getAccountBids = this.getAccountBids.bind(this)
-    //this.onLogBid = this.onLogBid.bind(this)
+    this.onLogBid = this.onLogBid.bind(this)
+  }
+
+  // vars to set up a new auction
+  _inputInitialPrice = null
+  _inputStartBlock = null
+  _inputEndBlock = null
+  _inputIpfsHash = null
+
+  onClickCreateAuction() {
+    ipfs.files.add(this.state.buffer, (error, result) =>{
+      if(error){
+        console.log(error)
+        return
+      }
+      
+      //console.log('ipfsHash', result[0].hash)
+      //console.log('price', this._inputInitialPrice.value)
+      //console.log('Account', this.state.currentAccount)
+      this.state.AuctionFactoryContract.methods.createAuction(
+        this._inputStartBlock.value,
+        this._inputEndBlock.value,
+        result[0].hash,
+        this._inputInitialPrice.value
+      ).send({ from: this.state.currentAccount, gas: 4000000 })
+      .then(function(receipt){
+        console.log(receipt)
+      })
+    })
+  }
+
+  captureFile(event) {
+    event.preventDefault()
+    const file = event.target.files[0]
+    const reader = new window.FileReader()
+    reader.readAsArrayBuffer(file)
+    reader.onloadend = () =>{
+      this.setState({ buffer: Buffer(reader.result)})
+      //console.log('buffer', this.state.buffer)
+    }
+  }
+
+  onLogBid(err, resp) {
+    console.log('LogBid ~>', resp.args)
+    this.getAllAuctions()
+    this.getAccountBids(this.state.currentAccount).then(currentAccountBids => {
+      this.setState({ currentAccountBids })
+    })
   }
 
   async componentDidMount(){
     let afc = await new this.props.web3.eth.Contract(AuctionFactory.abi, '0x4b6a2089FeA993d871489d5faf237EC0baD2d25A')
     afc.setProvider(this.props.web3.currentProvider)
-    let ac = await new this.props.web3.eth.Contract(Auction.abi, '0xf3Aae26a50cA58fAaB25BE3d85836F6aEaA47920')
+    let ac = await new this.props.web3.eth.Contract(Auction.abi, '0x9ec3FBA9d1E281Af9393e5F849e6Ed36c08fffe5')
     ac.setProvider(this.props.web3.currentProvider)
     this.setState({ AuctionFactoryContract: afc })
     this.setState({ AuctionContract: ac })
@@ -45,32 +102,33 @@ class Main extends Component {
       })
     })
 
-    /*AuctionFactory.deployed().AuctionCreated({ fromBlock: 0, toBlock: 'latest' }).watch((err, resp) => {
-      console.log('AuctionCreated', err, resp)
+    afc.events.AuctionCreated({
+      fromBlock: 0, toBlock: 'latest'
+    }).on('data', function(event){
+      //console.log(event)
+    }).on('changed', function(event){
       this.getAllAuctions()
-    })*/
+    }).on('error', console.error)
   }
 
-  onChangeAccount(evt) {
-    this.setCurrentAccount(evt.target.value)
-  }
-
-  setCurrentAccount(account) {
+  async setCurrentAccount(account) {
     this.props.web3.eth.defaultAccount = account
 
     this.getAccountBids(account).then(currentAccountBids => {
       this.setState({
         currentAccount: account,
-        //currentAccountBalance: this.props.web3.utils.fromWei(this.props.web3.eth.getBalance(account), 'ether').toString(),
-        currentAccountBids,
+        currentAccountBids
       })
+    })
+
+    const ethBalance = await this.props.web3.eth.getBalance(account)
+    this.setState({
+      currentAccountBalance: ethBalance
     })
   }
 
   async getAccountBids(account) {
-    console.log(account)
     const getBidPromises = this.state.auctions.map(auction => {
-      //this.state.AuctionContract.methods.getFundsByBidder(account).call().then(function(res){console.log(res)})
       return this.state.AuctionContract.methods.getFundsByBidder(account).call().then(bid => {
         return { auction: auction.address, bid }
       })
@@ -88,18 +146,21 @@ class Main extends Component {
   async getAllAuctions() {
     return new Promise((resolve, reject) => {
       return this.state.AuctionFactoryContract.methods.getAllAuctions().call().then(result => {
-        return Promise.all( result.map(auctionAddr => this.getAuction(auctionAddr)) )
+        return Promise.all(result.map(auctionAddr => this.getAuction(auctionAddr)))
       }).then(auctions => {
-
-        /*let auctionEventListeners = Object.assign({}, this.state.auctionEventListeners)
+        let auctionEventListeners = Object.assign({}, this.state.auctionEventListeners)
         const unloggedAuctions = auctions.filter(auction => this.state.auctionEventListeners[auction.address] === undefined)
         for (let auction of unloggedAuctions) {
-          auctionEventListeners[auction.address] = auction.contract.LogBid({ fromBlock: 0, toBlock: 'latest' })
-          auctionEventListeners[auction.address].watch(this.onLogBid)
-        }*/
-
-        //this.setState({ auctions, auctionEventListeners }, resolve)
-        this.setState({ auctions }, resolve)
+          auctionEventListeners[auction.address] = this.state.AuctionContract.events.LogBid({
+             fromBlock: 0, toBlock: 'latest' 
+          }, function(error, event){ console.log(event); 
+          }).on('data', function(event){
+            this.onLogBid(null, event)
+          }).on('changed', function(event){
+          })
+          .on('error', console.error)
+        }
+        this.setState({ auctions, auctionEventListeners }, resolve)
       })
     })
   }
@@ -122,9 +183,6 @@ class Main extends Component {
     const initialPrice = await auction.methods.initialPrice.call().then(function(result){
       return result
     })
-    const minimumBidIncrement = await auction.methods.minimumBidIncrement.call().then(function(result){
-      return result
-    })
     const canceled = await auction.methods.canceled.call().then(function(result){
       return result
     })
@@ -135,8 +193,8 @@ class Main extends Component {
       return result
     })
 
-    return Promise.all([owner, startBlock, endBlock, ipfsHash, initialPrice, minimumBidIncrement, canceled, highestBid, highestBidder]).then(vals => {
-      const [owner, startBlock, endBlock, ipfsHash, initialPrice, minimumBidIncrement, canceled, highestBid, highestBidder] = vals
+    return Promise.all([owner, startBlock, endBlock, ipfsHash, initialPrice, canceled, highestBid, highestBidder]).then(vals => {
+      const [owner, startBlock, endBlock, ipfsHash, initialPrice, canceled, highestBid, highestBidder] = vals
       return {
         contract: auction,
         address: auctionAddr,
@@ -145,7 +203,6 @@ class Main extends Component {
         endBlock: endBlock.toString(),
         ipfsHash: ipfsHash.toString(),
         initialPrice: initialPrice.toString(),
-        minimumBidIncrement: this.props.web3.utils.fromWei(minimumBidIncrement.toString(), 'ether').toString(),
         canceled: canceled,
         highestBid: this.props.web3.utils.fromWei(highestBid.toString(), 'ether').toString(),
         highestBidder: highestBidder
@@ -155,72 +212,106 @@ class Main extends Component {
 
   render() {
     return (
-      <div id="content">
-        <h1>Auction</h1>
-        <div id="content">
-        <p>Bloque actual {this.state.blockNumber}</p>
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Lote</th>
-                <th>Bloque inicial</th>
-                <th>Bloque final</th>
-                <th>Incremento m&iacute;nimo</th>
-                <th>Puja m&aacute;s alta</th>
-                <th>Your bid</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="auctionResults">
-              {this.state.auctions.map(auction => {
-                let status = 'Activa'
-                if (auction.canceled) {
-                  status = 'Cancelada'
-                } else {
-                  if (this.state.blockNumber > auction.endBlock) {
-                    status = 'Finalizada'
-                  } else {
-                    if (this.state.blockNumber < auction.startBlock) {
-                      status = 'Por iniciar'
-                    }
-                  }
-                }
-                let highestBidder='-'
-                if (auction.highestBidder!=='0x0000000000000000000000000000000000000000'){
-                    highestBidder = auction.highestBidder.substr(0, 6) + ": " + auction.highestBid
-                }
-                return (
-                  <tr key={auction.address}>
-                    <td>
-                      {auction.address.substr(0, 6)}<br/>
-                      <img src={`https://ipfs.io/ipfs/${auction.ipfsHash}`} className="img-thumbnail" width="50" height="50" alt="" />
-                    </td>
-                    <td>{auction.startBlock}</td>
-                    <td>{auction.endBlock}</td>
-                    <td>{auction.minimumBidIncrement} [Ether] 
-                    <img src={ethlogo} width="20" height="30" alt="eth logo" /></td>
-                    <td>
-                      {highestBidder} [Ether] <img src={ethlogo} width="20" height="30" alt="eth logo" />
-                    </td>
-                    <td>--</td>
-                    <td>{status}</td>
-                    <td>
-                      {auction.owner === this.state.currentAccount && (status === 'Activa' || status === 'Por iniciar') &&
-                        <button onClick={() => this.cancelAuction(auction)}>Cancel</button>
-                      }
-                      <div>
-                        <input ref={x => this._inputBidAmount = x} />
-                        <button onClick={() => this.onClickBid(auction)}>Bid</button>
-                      </div>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-          <hr />
-          <p>Balance: {this.props.web3.utils.fromWei(this.props.ethBalance, 'Ether')} [Ether] <img src={ethlogo} width="20" height="30" alt="eth logo" /></p>
+      <div>
+        <Navbar account={this.state.currentAccount}/>
+        <div className="container-fluid mt-5">
+          <div className="row">
+            <main role="main" className="col-lg-12 d-flex text-center">
+              <div className="content mr-auto ml-auto">
+                <div id="content">
+                <img src={logo} className="App-logo" alt="logo" />
+                  <h1>Subastas</h1>
+                  <div id="content">
+                    <p>Bloque actual {this.state.blockNumber}</p>
+                    <div className="form-create-auction">
+                      <h2>Crear un lote</h2>
+                      <table className="table">
+                        <tbody>
+                          <tr>
+                            <td>Precio inicial</td>
+                            <td><input type="text" ref={x => this._inputInitialPrice = x} defaultValue={0} /></td>
+                          </tr>
+                          <tr>
+                            <td>Bloque inicial</td>
+                            <td><input type="text" ref={x => this._inputStartBlock = x} defaultValue={0} /></td>
+                          </tr>
+                          <tr>
+                            <td>Bloque final</td>
+                            <td><input type="text" ref={x => this._inputEndBlock = x} defaultValue={10} /></td>
+                          </tr>
+                          <tr>
+                            <td>Image</td>
+                            <td><input type='file' onChange={this.captureFile} required/></td>
+                          </tr>
+                        </tbody>
+                      </table>
+                      <button onClick={this.onClickCreateAuction}>Crear subasta</button><br />
+                    </div>
+                    <table className="table">
+                      <thead>
+                        <tr>
+                          <th>Lote</th>
+                          <th>Precio inical</th>
+                          <th>Bloque inicial</th>
+                          <th>Bloque final</th>
+                          <th>Puja m&aacute;s alta</th>
+                          <th>Su puja</th>
+                          <th>Status</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody id="auctionResults">
+                        {this.state.auctions.map(auction => {
+                          let status = 'Activa'
+                          if (auction.canceled) {
+                            status = 'Cancelada'
+                          } else {
+                            if (this.state.blockNumber > auction.endBlock) {
+                              status = 'Finalizada'
+                            } else {
+                              if (this.state.blockNumber < auction.startBlock) {
+                                status = 'Por iniciar'
+                              }
+                            }
+                          }
+                          return (
+                            <tr key={auction.address}>
+                              <td>
+                                {auction.address.substr(0, 6)}<br/>
+                                <img src={`https://ipfs.io/ipfs/${auction.ipfsHash}`} className="img-thumbnail" width="50" height="50" alt="" />
+                              </td>
+                              <td>{auction.initialPrice}</td>
+                              <td>{auction.startBlock}</td>
+                              <td>{auction.endBlock}</td>
+                              <td>
+                                {auction.highestBidder.substr(0, 6) + ": " + auction.highestBid} <img src={ethlogo} width="20" height="30" alt="eth logo" />
+                              </td>
+                              <td>{this.state.currentAccountBids[auction.address]} <img src={ethlogo} width="20" height="30" alt="eth logo" /></td>
+                              <td>{status}</td>
+                              <td>
+                                {
+                                  auction.owner === this.state.currentAccount && (status === 'Activa' || status === 'Por iniciar') &&
+                                  <button onClick={() => this.cancelAuction(auction)}>Cancel</button>
+                                }
+                                {
+                                  auction.owner !== this.state.currentAccount &&
+                                  <div>
+                                    <input ref={x => this._inputBidAmount = x} /> <button onClick={() => this.onClickBid(auction)}>Bid</button>
+                                  </div>
+                                }
+                              </td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                    </table>
+                    <hr />
+                    <p>Balance: {this.props.web3.utils.fromWei(this.state.currentAccountBalance.toString(), 'Ether')} <img src={ethlogo} width="20" height="30" alt="eth logo" /></p>
+                  </div>
+                </div>
+              </div>
+            </main>
+          </div>
         </div>
       </div>
     );
@@ -228,3 +319,6 @@ class Main extends Component {
 }
 
 export default Main;
+/*
+
+*/

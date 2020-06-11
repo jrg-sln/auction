@@ -23,5 +23,3 @@ class Navbar extends Component {
 }
 
 export default Navbar;
-                          
-// <a className="navbar-brand col-sm-3 col-md-2 mr-0" href="#" ></a>
