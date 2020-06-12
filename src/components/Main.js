@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import ipfs from './ipfs';
-
+import { AUCTIONFACTORY_ADDRESS, AUCTION_ADDRESS } from '../config.js'
 import Auction from '../abis/Auction.json'
 import AuctionFactory from '../abis/AuctionFactory.json'
 
@@ -85,9 +85,9 @@ class Main extends Component {
   }
 
   async componentDidMount(){
-    let afc = await new this.props.web3.eth.Contract(AuctionFactory.abi, '0x4b6a2089FeA993d871489d5faf237EC0baD2d25A')
+    let afc = await new this.props.web3.eth.Contract(AuctionFactory.abi, AUCTIONFACTORY_ADDRESS)
     afc.setProvider(this.props.web3.currentProvider)
-    let ac = await new this.props.web3.eth.Contract(Auction.abi, '0x9ec3FBA9d1E281Af9393e5F849e6Ed36c08fffe5')
+    let ac = await new this.props.web3.eth.Contract(Auction.abi, AUCTION_ADDRESS)
     ac.setProvider(this.props.web3.currentProvider)
     this.setState({ AuctionFactoryContract: afc })
     this.setState({ AuctionContract: ac })

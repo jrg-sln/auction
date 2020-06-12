@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import Web3 from 'web3';
 import Main from './Main'
+import { PROVIDER_ADDRESS } from '../config.js'
 import './App.css';
 
 
@@ -21,7 +22,7 @@ class App extends Component {
   }
 
   async loadBlockchainData() {
-    var web3Location = 'http://127.0.0.1:8545'
+    var web3Location = PROVIDER_ADDRESS
     const web3Provider = new Web3.providers.HttpProvider(web3Location)
     const web3 = new Web3(web3Provider)
     const accounts = await web3.eth.getAccounts()
