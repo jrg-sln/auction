@@ -163,16 +163,22 @@ class Main extends Component {
   }
 
   async setBid(auction, name) {
+    let initialPrice = auction.initialPrice
+    let highestBid = auction.highestBid
+    let minBid = Math.max(initialPrice, highestBid)
     let bid = document.getElementById(name).value
-    let auct = await new this.props.web3.eth.Contract(Auction.abi, auction.address)
-    auct.methods.placeBid()
-      .send({ from: this.state.currentAccount, 
+
+    if(bid <= minBid){
+        alert("La puja tiene que ser mayor a: " + minBid)
+        return
+    }
+
+    auction.contract.methods.placeBid()
+      .send({ from: this.state.currentAccount,
               value: this.props.web3.utils.toWei(bid.toString(), 'ether'),
               gas: 6721975,
               gasPrice: 20000000000 })
       .then(function(receipt) {
-        //console.log('Bid done.', receipt)
-        //this.getAllAuctions()
         window.location.reload()
       })
   }
