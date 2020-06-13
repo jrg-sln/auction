@@ -4,7 +4,6 @@ import Main from './Main'
 import { PROVIDER_ADDRESS } from '../config.js'
 import './App.css';
 
-
 class App extends Component {
 
   constructor (props){
@@ -23,13 +22,10 @@ class App extends Component {
 
   async loadBlockchainData() {
     var web3Location = PROVIDER_ADDRESS
-    const web3Provider = new Web3.providers.HttpProvider(web3Location)
-    const web3 = new Web3(web3Provider)
+    const web3 = new Web3(Web3.givenProvider || web3Location)
     const accounts = await web3.eth.getAccounts()
-    //const ethBalance = await web3.eth.getBalance(accounts[0])
     this.setState({ web3 })
     this.setState({ currentAccount: accounts[0] })
-    //this.setState({ currentAccountBalance: ethBalance })
     this.setState({ loading: false })
   }
 

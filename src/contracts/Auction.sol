@@ -41,48 +41,18 @@ contract Auction{
 
     function placeBid() public payable onlyAfterStart onlyBeforeEnd onlyNotCanceled onlyNotOwner returns (bool success) {
         require(msg.value > 0, "Payments bust be more than 0 ETH.");
-
-        // calculate the user's total bid based on the current amount they've sent to the contract
-        // plus whatever has been sent with this transaction
         uint newBid = fundsByBidder[msg.sender] + msg.value;
-        require(newBid > highestBid, "Bid minor than the highest registered.");
+        require(newBid > initialPrice, "La puja no supera el precio inicial.");
+        require(newBid > highestBid, "La puja es menor a la más alta registrada.");
 
-        // grab the previous highest bid (before updating fundsByBidder, in case msg.sender is the
-        // highestBidder and is just increasing their maximum bid).
-        uint highestBid = fundsByBidder[highestBidder];
-        /* fundsByBidder[msg.sender] = newBid;
-
-        if (newBid <= highestBid) {
-            // if the user has overbid the highestBindingBid but not the highestBid, we simply
-            // increase the highestBindingBid and leave highestBidder alone.
-
-            // note that this case is impossible if msg.sender == highestBidder because you can never
-            // bid less ETH than you've already bid.
-
-            highestBid = min(newBid + bidIncrement, highestBid);
-        } else {
-            // if msg.sender is already the highest bidder, they must simply be wanting to raise
-            // their maximum bid, in which case we shouldn't increase the highestBindingBid.
-
-            // if the user is NOT highestBidder, and has overbid highestBid completely, we set them
-            // as the new highestBidder and recalculate highestBindingBid.
-
-            if (msg.sender != highestBidder) {
-                highestBidder = msg.sender;
-                highestBid = min(newBid, highestBid + bidIncrement);
-            }
-            highestBid = newBid;
-        } */
+        fundsByBidder[msg.sender] = newBid;
+        if (msg.sender != highestBidder) {
+            highestBidder = msg.sender;
+        }
+        highestBid = newBid;
 
         emit LogBid(msg.sender, newBid, highestBidder, highestBid, highestBid);
         return true;
-    }
-
-    function min(uint a, uint b) private pure returns (uint) {
-        if (a < b){
-            return a;
-        }
-        return b;
     }
 
     function cancelAuction() public onlyOwner onlyBeforeEnd onlyNotCanceled returns (bool success) {
@@ -99,7 +69,6 @@ contract Auction{
             // if the auction was canceled, everyone should simply be allowed to withdraw their funds
             withdrawalAccount = msg.sender;
             withdrawalAmount = fundsByBidder[withdrawalAccount];
-
         } else {
             // the auction finished without being canceled
 
@@ -108,18 +77,8 @@ contract Auction{
                 withdrawalAccount = highestBidder;
                 withdrawalAmount = highestBid;
                 ownerHasWithdrawn = true;
-
-            } else if (msg.sender == highestBidder) {
-                // the highest bidder should only be allowed to withdraw the difference between their
-                // highest bid and the highestBindingBid
-                withdrawalAccount = highestBidder;
-                if (ownerHasWithdrawn) {
-                    withdrawalAmount = fundsByBidder[highestBidder];
-                } else {
-                    withdrawalAmount = fundsByBidder[highestBidder] - highestBid;
-                }
-
             } else {
+                require(msg.sender != highestBidder, "Tú fuiste el ganador del lote, no puedes retirar.");
                 // anyone who participated but did not win the auction should be allowed to withdraw
                 // the full amount of their funds
                 withdrawalAccount = msg.sender;
@@ -128,16 +87,12 @@ contract Auction{
         }
 
         //if (withdrawalAmount == 0) throw;
-        require(withdrawalAmount == 0, "Nothing to withdraw.");
-
+        require(withdrawalAmount > 0, "No hay fondos que retirar.");
         fundsByBidder[withdrawalAccount] -= withdrawalAmount;
 
         // send the funds
-        //if (!msg.sender.send(withdrawalAmount)) throw;
-        require(msg.sender.send(withdrawalAmount), "Sender withdrawal amount failed.");
-
+        msg.sender.transfer(withdrawalAmount);
         emit LogWithdrawal(msg.sender, withdrawalAccount, withdrawalAmount);
-
         return true;
     }
 
