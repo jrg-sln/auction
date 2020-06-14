@@ -5,6 +5,8 @@ contract Auction{
     address public owner;
     uint    public startBlock;
     uint    public endBlock;
+    uint    public startDate;
+    uint    public endDate;
     string  public ipfsHash;
     uint    public initialPrice;
     // Auction state
@@ -19,14 +21,17 @@ contract Auction{
     event LogCanceled();
 
     // Constructor
-    constructor(address _owner, uint _startBlock, uint _endBlock, string memory _ipfs, uint _initialPrice) public {
-        require(_startBlock < _endBlock, "El bloque final debe ser mayor que el bloque final.");
-        require(_startBlock >= block.number, "El bloque inicial debe ser mayor o igual al bloque actual.");
+    constructor(address _owner, uint _startBlock, uint _endBlock, uint _startDate, uint _endDate,
+                     string memory _ipfs, uint _initialPrice) public {
+        require(_startBlock < _endBlock, "El bloque final debe ser mayor que el bloque inicial.");
+        require(_startDate < _endDate, "La fecha final debe ser mayor que la inicial.");
         require(_owner != address(0), "El propietario proporcionado no es válido.");
 
         owner = _owner;
-        startBlock = _startBlock;
-        endBlock = _endBlock;
+        startBlock = block.number + _startBlock;
+        endBlock = block.number + _endBlock;
+        startDate = _startDate;
+        endDate = _endDate;
         ipfsHash = _ipfs;
         initialPrice = _initialPrice;
     }
@@ -66,21 +71,15 @@ contract Auction{
         uint withdrawalAmount;
 
         if (canceled) {
-            // if the auction was canceled, everyone should simply be allowed to withdraw their funds
             withdrawalAccount = msg.sender;
             withdrawalAmount = fundsByBidder[withdrawalAccount];
         } else {
-            // the auction finished without being canceled
-
             if (msg.sender == owner) {
-                // the auction's owner should be allowed to withdraw the highestBindingBid
                 withdrawalAccount = highestBidder;
                 withdrawalAmount = highestBid;
                 ownerHasWithdrawn = true;
             } else {
                 require(msg.sender != highestBidder, "Tú fuiste el ganador del lote, no puedes retirar.");
-                // anyone who participated but did not win the auction should be allowed to withdraw
-                // the full amount of their funds
                 withdrawalAccount = msg.sender;
                 withdrawalAmount = fundsByBidder[withdrawalAccount];
             }
