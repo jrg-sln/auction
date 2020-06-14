@@ -173,9 +173,13 @@ class Main extends Component {
         return
     }
 
+    let ultimaPuja = this.props.web3.utils.toWei(this.state.currentAccountBids[auction.address], 'ether')
+    let nuevaPuja = this.props.web3.utils.toWei(bid.toString(), 'ether')
+    console.log(ultimaPuja, nuevaPuja, nuevaPuja - ultimaPuja)
+
     auction.contract.methods.placeBid()
       .send({ from: this.state.currentAccount,
-              value: this.props.web3.utils.toWei(bid.toString(), 'ether'),
+              value: nuevaPuja - ultimaPuja,
               gas: 6721975,
               gasPrice: 20000000000 })
       .then(function(receipt) {
