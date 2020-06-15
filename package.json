@@ -4,12 +4,12 @@
   "description": "Decentralized Auction System",
   "author": "DAJ",
   "dependencies": {
-    "browserslist": "4.12.0",
     "bootstrap": "4.5.0",
+    "browserslist": "4.12.0",
     "identicon.js": "^2.3.3",
     "ipfs-api": "^26.1.2",
     "react": "16.13.1",
-    "react-bootstrap": "1.0.1",
+    "react-bootstrap": "^1.0.1",
     "react-dom": "16.13.1",
     "react-scripts": "3.4.1",
     "web3": "1.2.9"
