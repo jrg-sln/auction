@@ -9,6 +9,11 @@ contract AuctionFactory{
         address auctionContract, address owner, uint numAuctions, address[] allAuctions
     );
 
+    event LogWithdrawal(
+        address withdrawer,
+        uint256 withdrawalAccount
+    );
+
     constructor () public {
         owner = msg.sender;
     }
@@ -30,7 +35,9 @@ contract AuctionFactory{
     }
 
     function withdraw() public onlyOwner returns (bool success){
+        uint256 balance = address(this).balance;
         owner.transfer(address(this).balance);
+        emit LogWithdrawal(msg.sender, balance);
         return true;
     }
 
