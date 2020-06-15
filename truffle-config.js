@@ -3,8 +3,12 @@ module.exports = {
     development: {
       host: "127.0.0.1",
       port: 7545,
-      network_id: "*",
-      from: '0x6CB9bfa330bc2515bc3e38Bc3A4517f7638733C6'
+      network_id: "*" // Match any network id
+    },
+    production: {
+      host: "ec2-18-217-48-192.us-east-2.compute.amazonaws.com",
+      port: 8545,
+      network_id: "*" // Match any network id
     },
   },
   contracts_directory: './src/contracts/',
@@ -19,3 +23,4 @@ module.exports = {
     }
   }
 }
+
