@@ -36,7 +36,9 @@ class Main extends Component {
       currentAccountBalance: 0,
       currentAccountBids: {},
       startDate: new Date(),
-      endDate: new Date()
+      endDate: new Date(),
+      contractsOwner: '',
+      ownersBalance: 0
     }
     this._inputStartBlock = this.state.startDate
     this._inputEndBlock = this.state.endDate
@@ -55,7 +57,6 @@ class Main extends Component {
   _inputStartBlock = null
   _inputEndBlock = null
   _inputIpfsHash = null
-  _blockNumber = null
 
   async componentDidMount(){
     let afc = await new this.props.web3.eth.Contract(AuctionFactory.abi, AUCTIONFACTORY_ADDRESS)
@@ -74,6 +75,21 @@ class Main extends Component {
         this.setCurrentAccount(this.state.accounts[0])
       })
     })
+
+    this.state.AuctionFactoryContract.methods.getBalance().call().then(ownersBalance => {
+      console.log('Balance: ', ownersBalance)
+      this.setState({
+        ownersBalance
+      })
+    })
+
+    this.state.AuctionFactoryContract.methods.owner().call().then( contractsOwner => {
+      console.log('Owner: ', contractsOwner)
+      this.setState({
+        contractsOwner
+      })
+    })
+    
   }
 
   async setCurrentAccount(account) {
@@ -174,6 +190,8 @@ class Main extends Component {
       return
     }
 
+    let pay = this.props.web3.utils.toWei("0.1", 'ether')
+
     ipfs.files.add(this.state.buffer, (error, result) => {
       if(error){
         console.log(error)
@@ -187,7 +205,10 @@ class Main extends Component {
         endTime,
         result[0].hash,
         this._inputInitialPrice.value
-      ).send({ from: this.state.currentAccount, gas: 4000000, gasPrice: 20000000000 })
+      ).send({ from: this.state.currentAccount, 
+                value: pay,
+                gas: 4000000, 
+                gasPrice: 20000000000 })
       .then(function(receipt){
         //console.log(receipt)
         //console.log(receipt.status)
@@ -241,9 +262,20 @@ class Main extends Component {
             gas: 6721975,
             gasPrice: 20000000000 })
     .then(function(receipt) {
-      //console.log('Cancel done.', receipt)
+      //console.log('Withdraw bid done.', receipt)
       //this.getAllAuctions()
       window.location.reload()
+    })
+  }
+
+  async withdrawBalance() {
+    this.state.AuctionFactoryContract.methods.withdraw()
+    .send({ from: this.state.currentAccount, 
+            gas: 6721975,
+            gasPrice: 20000000000 })
+    .then(function(receipt) {
+      console.log('Withdraw balance done.', receipt)
+      //window.location.reload()
     })
   }
 
@@ -423,6 +455,11 @@ class Main extends Component {
                       Balance: {this.props.web3.utils.fromWei(this.state.currentAccountBalance.toString(), 'Ether')} 
                       <img src={ethlogo} width="20" height="30" alt="eth logo" />
                     </p>
+                    {
+                      this.state.contractsOwner===this.state.currentAccount &&
+                      this.state.ownersBalance > 0 &&
+                      <button onClick={() => this.withdrawBalance()}>Retirar</button>
+                    }
                   </div>
                 </div>
               </div>

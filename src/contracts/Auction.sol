@@ -20,7 +20,6 @@ contract Auction{
     event LogWithdrawal(address withdrawer, address withdrawalAccount, uint amount);
     event LogCanceled();
 
-    // Constructor
     constructor(address _owner, uint _startBlock, uint _endBlock, uint _startDate, uint _endDate,
                      string memory _ipfs, uint _initialPrice) public {
         require(_startBlock < _endBlock, "El bloque final debe ser mayor que el bloque inicial.");
@@ -85,49 +84,41 @@ contract Auction{
             }
         }
 
-        //if (withdrawalAmount == 0) throw;
         require(withdrawalAmount > 0, "No hay fondos que retirar.");
         fundsByBidder[withdrawalAccount] -= withdrawalAmount;
 
-        // send the funds
         msg.sender.transfer(withdrawalAmount);
         emit LogWithdrawal(msg.sender, withdrawalAccount, withdrawalAmount);
         return true;
     }
 
     modifier onlyOwner {
-        //if (msg.sender != owner) throw;
-        require(msg.sender == owner, "Only the owner can performe this action.");
+        require(msg.sender == owner, "Solo el propietario del contrato puede ejecutar esta función");
         _;
     }
 
     modifier onlyNotOwner {
-        //if (msg.sender == owner) throw;
-        require(msg.sender != owner, "Owner cannot performe this action.");
+        require(msg.sender != owner, "El propietario no puede ejecutar esta función.");
         _;
     }
 
     modifier onlyAfterStart {
-        //if (block.number < startBlock) throw;
-        require(block.number >= startBlock, "This auction was not started yet.");
+        require(block.number >= startBlock, "La subasta de este lote no ha iniciado.");
         _;
     }
 
     modifier onlyBeforeEnd {
-        //if (block.number > endBlock) throw;
-        require(block.number <= endBlock, "This auction is done.");
+        require(block.number <= endBlock, "Este lote ha terminado.");
         _;
     }
 
     modifier onlyNotCanceled {
-        //if (canceled) throw;
-        require(!canceled, "This auction is cancel.");
+        require(!canceled, "Este lote está cancelada.");
         _;
     }
 
     modifier onlyEndedOrCanceled {
-        //if (block.number < endBlock && !canceled) throw;
-        require(block.number > endBlock || canceled, "This auction isnt done or cancel yet.");
+        require(block.number > endBlock || canceled, "Esta subasta no ha sido cancelada ni ha terminado.");
         _;
     }
 }

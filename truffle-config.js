@@ -3,7 +3,8 @@ module.exports = {
     development: {
       host: "127.0.0.1",
       port: 7545,
-      network_id: "*" // Match any network id
+      network_id: "*",
+      from: '0x6CB9bfa330bc2515bc3e38Bc3A4517f7638733C6'
     },
   },
   contracts_directory: './src/contracts/',
