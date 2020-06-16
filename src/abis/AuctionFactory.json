@@ -4449,10 +4449,67 @@
       "links": {},
       "address": "0xAFca2295f82E0262cf57Ea44D2B2EBE2E5A8Def6",
       "transactionHash": "0xfe8d179a8c3fc2367215f68c7c80c589d8e229e4525b06941f40c82b9e922e2f"
+    },
+    "1592317126079": {
+      "events": {
+        "0x0d314047f0d1e39dbbd521f0844c35332083a15926b906540faa68e1a4262b68": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "auctionContract",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "owner",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "numAuctions",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "address[]",
+              "name": "allAuctions",
+              "type": "address[]"
+            }
+          ],
+          "name": "AuctionCreated",
+          "type": "event"
+        },
+        "0xb4214c8c54fc7442f36d3682f59aebaf09358a4431835b30efb29d52cf9e1e91": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "withdrawer",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "withdrawalAccount",
+              "type": "uint256"
+            }
+          ],
+          "name": "LogWithdrawal",
+          "type": "event"
+        }
+      },
+      "links": {},
+      "address": "0xF8328bf1C7AD2bBd1a44896465Fad5C7255742A0",
+      "transactionHash": "0x1228dd89d487e2036360e9482a3aaaf9127fcbc0b06db6795d9bd93f4d2e09d8"
     }
   },
   "schemaVersion": "3.2.0",
-  "updatedAt": "2020-06-15T23:36:33.258Z",
+  "updatedAt": "2020-06-16T14:20:47.314Z",
   "networkType": "ethereum",
   "devdoc": {
     "methods": {}

@@ -11218,10 +11218,85 @@
       "links": {},
       "address": "0x90eb96b1675268DC33c8ee17773E0b0971Bcc70D",
       "transactionHash": "0x2d4a5baf152a2a2a68c49f3c566f5f3615585d6dfb103c75180d6e765ee8fc7c"
+    },
+    "1592317126079": {
+      "events": {
+        "0xf152f4ff5e488c55370a2d53925a55055228ebd8ec95bd0251bbb299e48786b0": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "bidder",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "bid",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "highestBidder",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "highestBid",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "highestBindingBid",
+              "type": "uint256"
+            }
+          ],
+          "name": "LogBid",
+          "type": "event"
+        },
+        "0x462b6ca7f632601af1295aeb320851f50e8e630a309173f23535845ea4bfb3b9": {
+          "anonymous": false,
+          "inputs": [],
+          "name": "LogCanceled",
+          "type": "event"
+        },
+        "0x0ec497a8ae5b1ba29c60470ef651def995fac3deebbdcc56c47a4e5f51a4c2bd": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "withdrawer",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "withdrawalAccount",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "amount",
+              "type": "uint256"
+            }
+          ],
+          "name": "LogWithdrawal",
+          "type": "event"
+        }
+      },
+      "links": {},
+      "address": "0xdd5C565C4518dDd8cA333878E9A92150DD1fb868",
+      "transactionHash": "0xcd0fddc0ec6f2a9eab6e89eae9da68e986e4444934dfb9aee96c4a6afbd78464"
     }
   },
   "schemaVersion": "3.2.0",
-  "updatedAt": "2020-06-15T23:36:33.242Z",
+  "updatedAt": "2020-06-16T14:20:47.304Z",
   "networkType": "ethereum",
   "devdoc": {
     "methods": {}
