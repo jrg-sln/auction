@@ -115,8 +115,8 @@ class AuctionList extends React.Component {
                           }
                       }
                   }
-                  let initDate = new Date(Number(auction.startDate))
-                  let finishDate = new Date(Number(auction.endDate))
+                  let initDate = new Date(Number(auction.startDate));
+                  let finishDate = new Date(Number(auction.endDate));
                   return (
                       <tr key={auction.address}>
                         <td>

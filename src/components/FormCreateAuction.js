@@ -87,7 +87,7 @@ class FormCreateAuction extends React.Component {
       ipfs.files.add(this.state.buffer, (error, result) => {
         if(error){
             console.log(error)
-            return
+            return;
         }
 
         this.props.AuctionFactoryContract.methods.createAuction(
