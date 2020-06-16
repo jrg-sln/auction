@@ -14,14 +14,11 @@
     $ truffle console --network <blockchain>
     > AuctionFactory.address
     '0xdd...'
-    > Auction.address
-    '0xF8...'
     ```
 4. Set the correct values of the variables in `src/config.js`
     ```javascript
     export const PROVIDER_ADDRESS = 'http://<blockchain_node_address:port>'
     export const AUCTIONFACTORY_ADDRESS = '0xdd...'
-    export const AUCTION_ADDRESS = '0xF8...'
     ```
 5. Install the project dependencies
    ```bash
