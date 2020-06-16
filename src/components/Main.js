@@ -146,11 +146,11 @@ class Main extends Component {
       this.getAllAuctions();
     });
 
-    this.props.contracts.AuctionFactory.events.LogWithdrawal((err,event) => {
-        this.state.AuctionFactoryContract.methods.getBalance().call().then(ownersBalance => {
-        this.setState({ ownersBalance  });
-      });
-    });
+    // this.props.contracts.AuctionFactory.events.LogWithdrawal((err,event) => {
+    //     this.props.contracts.AuctionFactory.methods.getBalance().call().then(ownersBalance => {
+    //         this.setState({ ownersBalance  });
+    //   });
+    // });
 
     this.state.auctions.forEach(auction => {
                                 auction.contract.events.LogBid((err,event) => {
@@ -170,7 +170,6 @@ class Main extends Component {
                                 });
 
     });
-
 
     return (
       <div>
@@ -207,8 +206,9 @@ class Main extends Component {
                       Balance: {this.props.web3.utils.fromWei(this.state.currentAccountBalance.toString(), 'Ether')}
                       <img src={ethlogo} width="20" height="30" alt="eth logo" />
                     </p>
+
                     {
-                      this.state.contractsOwner===this.props.currentAccount &&
+                      this.state.contractsOwner.toLowerCase() === this.props.currentAccount.toLowerCase() &&
                       this.state.ownersBalance > 0 &&
                       <button onClick={() => this.withdrawBalance()}>Retirar</button>
                     }
