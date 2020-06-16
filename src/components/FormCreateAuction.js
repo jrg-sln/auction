@@ -55,7 +55,6 @@ class FormCreateAuction extends React.Component {
   }
 
   createAuction(event) {
-    this.setState({loading:true});
     event.preventDefault();
     let now = new Date().getTime()
     let initialTime = this.state.startDate.getTime()
@@ -84,13 +83,14 @@ class FormCreateAuction extends React.Component {
     let pay = this.props.web3.utils.toWei("0.1", 'ether');
 
     if(window.confirm("¿Aceptas un cobro de 0.1 ether por comisión?")) {
+      this.setState({loading:true});
       ipfs.files.add(this.state.buffer, (error, result) => {
         if(error){
+            this.setState({loading: false})
             console.log(error)
             return;
         }
 
-        this.props.AuctionFactoryContract.methods.createAuction(
         console.log("Valores nueva Subasta",
                     {
                         initialTimeBlock: initialTimeBlock,
@@ -99,6 +99,7 @@ class FormCreateAuction extends React.Component {
                         endTime: endTime
                     });
 
+        this.props.AuctionFactoryContract.methods.createAuction(
             initialTimeBlock,
             endTimeBlock,
             initialTime,
@@ -114,6 +115,7 @@ class FormCreateAuction extends React.Component {
             })
             .on('error', (error, receipt) => {
                 alert("Lo sentimos, hubo un error.");
+                console.log(error);
                 this.setState({loading: false})
             });
 

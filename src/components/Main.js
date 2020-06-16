@@ -146,11 +146,11 @@ class Main extends Component {
       this.getAllAuctions();
     });
 
-    // this.props.contracts.AuctionFactory.events.LogWithdrawal((err,event) => {
-    //     this.state.AuctionFactoryContract.methods.getBalance().call().then(ownersBalance => {
-    //     this.setState({ ownersBalance  });
-    //   });
-    // });
+    this.props.contracts.AuctionFactory.events.LogWithdrawal((err,event) => {
+        this.state.AuctionFactoryContract.methods.getBalance().call().then(ownersBalance => {
+        this.setState({ ownersBalance  });
+      });
+    });
 
     this.state.auctions.forEach(auction => {
                                 auction.contract.events.LogBid((err,event) => {
@@ -159,6 +159,11 @@ class Main extends Component {
                                     });
                                 });
                                 auction.contract.events.LogCanceled((err,event) => {
+                                    this.getAllAuctions().then(_ => {
+                                        this.setCurrentAccount(this.props.currentAccount);
+                                    });
+                                });
+                                auction.contract.events.LogWithdrawal((err,event) => {
                                     this.getAllAuctions().then(_ => {
                                         this.setCurrentAccount(this.props.currentAccount);
                                     });
