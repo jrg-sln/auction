@@ -150,9 +150,6 @@ class AuctionList extends React.Component {
                         </td>
                         <td>{status}</td>
                         <td>
-                          {"OWNER: " + auction.owner} <br/>
-                          {"HIGHESTB: " + auction.highestBidder} <br/>
-                          {"CURRENTAC: " + this.props.currentAccount} <br/>
                           {
                               auction.owner.toLowerCase() === this.props.currentAccount.toLowerCase() &&
                                   (status === 'Activa' || status === 'Por iniciar') &&
