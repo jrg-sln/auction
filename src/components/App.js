@@ -70,7 +70,6 @@ class App extends React.Component {
                   web3={this.state.web3}
                   contracts={this.state.contracts}
                   currentAccount={this.state.currentAccount}
-                  aAddresses={this.state.aAddresses}
                 />;
     }
     return (
