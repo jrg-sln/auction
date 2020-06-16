@@ -141,12 +141,12 @@ class AuctionList extends React.Component {
                         <td>{status}</td>
                         <td>
                           {
-                              auction.owner === this.props.currentAccount &&
+                              auction.owner.toLowerCase() === this.props.currentAccount.toLowerCase() &&
                                   (status === 'Activa' || status === 'Por iniciar') &&
                                   <button onClick={() => this.cancelAuction(auction)}>Cancelar</button>
                           }
                           {
-                              auction.owner !== this.props.currentAccount &&
+                              auction.owner.toLowerCase() !== this.props.currentAccount.toLowerCase() &&
                                   (status === 'Activa') &&
                                   <div>
                                     <input type="text" id={auction.address} required/>
@@ -154,14 +154,33 @@ class AuctionList extends React.Component {
                                   </div>
                           }
                           {
-                              auction.owner !== this.props.currentAccount &&
+                              status === 'Finalizada' &&
+                              !auction.ownerHasWithdrawn  &&
+                              auction.owner.toLowerCase() === this.props.currentAccount.toLowerCase() &&
+                                  <button disabled={auction.highestBid === '0'}
+                                          onClick={() => this.withdrawBid(auction)}>Retirar Ganancia</button>
+                          }
+                          {
+                              status === 'Finalizada' &&
+                              auction.ownerHasWithdrawn  &&
+                              auction.owner.toLowerCase() === this.props.currentAccount.toLowerCase() &&
+                                "Ganancia Retirada"
+                          }
+                          {
+                              status === 'Finalizada' &&
+                              auction.highestBidder.toLowerCase() !== this.props.currentAccount.toLowerCase() &&
                                   this.props.currentAccountBids[auction.address] > 0 &&
-                                  (status === 'Cancelada' || status === 'Finalizada') &&
-                                  <button onClick={() => this.withdrawBid(auction)}>Retirar</button>
+                                  <button onClick={() => this.withdrawBid(auction)}>Recuperar ether</button>
+                          }
+                          {
+                              status === 'Cancelada' &&
+                              auction.owner.toLowerCase() !== this.props.currentAccount.toLowerCase() &&
+                                  this.props.currentAccountBids[auction.address] > 0 &&
+                                  <button onClick={() => this.withdrawBid(auction)}>Recuperar ether</button>
                           }
                         </td>
                       </tr>
-                  )
+                  );
               })}
             </tbody>
           </table>
