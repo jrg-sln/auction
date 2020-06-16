@@ -26,10 +26,11 @@ class AuctionList extends React.Component {
         return;
     }
 
-    this.setState({ loading: true });
+
     let ultimaPuja = this.props.web3.utils.toWei(this.props.currentAccountBids[auction.address], 'ether');
     let nuevaPuja = this.props.web3.utils.toWei(bid.toString(), 'ether');
 
+    this.setState({ loading: true });
     auction.contract.methods.placeBid()
       .send({ from: this.props.currentAccount,
               value: nuevaPuja - ultimaPuja,
@@ -40,32 +41,41 @@ class AuctionList extends React.Component {
             })
             .on('error', (error, receipt) => {
                 alert("Lo sentimos, hubo un error.");
+                console.log(error);
                 this.setState({loading: false})
             });
   }
 
   async cancelAuction(auction) {
+    this.setState({ loading: true });
     auction.contract.methods.cancelAuction()
     .send({ from: this.props.currentAccount,
             gas: 6721975,
             gasPrice: 20000000000 })
-    // .then(function(receipt) {
-    //   //console.log('Cancel done.', receipt)
-    //   //this.getAllAuctions()
-    //   window.location.reload()
-    // })
+            .on('receipt', recipient => {
+                this.setState({loading: false})
+            })
+            .on('error', (error, receipt) => {
+                alert("Lo sentimos, hubo un error.");
+                console.log(error);
+                this.setState({loading: false})
+            });
   }
 
   async withdrawBid(auction) {
+    this.setState({ loading: true });
     auction.contract.methods.withdraw()
     .send({ from: this.props.currentAccount,
             gas: 6721975,
             gasPrice: 20000000000 })
-    // .then(function(receipt) {
-    //   //console.log('Withdraw bid done.', receipt)
-    //   //this.getAllAuctions()
-    //   window.location.reload()
-    // })
+            .on('receipt', recipient => {
+                this.setState({loading: false});
+            })
+            .on('error', (error, receipt) => {
+                alert("Lo sentimos, hubo un error.");
+                console.log(error);
+                this.setState({loading: false});
+            });
   }
 
 
