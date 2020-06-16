@@ -42,6 +42,7 @@ class AuctionList extends React.Component {
             .on('error', (error, receipt) => {
                 alert("Lo sentimos, hubo un error.");
                 console.log(error);
+                console.log(receipt);
                 this.setState({loading: false})
             });
   }
@@ -93,7 +94,7 @@ class AuctionList extends React.Component {
               <tr>
                 <th>Lote</th>
                 <th>Precio inicial</th>
-                <th>Inoicio</th>
+                <th>Inicio</th>
                 <th>Fin</th>
                 <th>Puja m&aacute;s alta</th>
                 <th>Su puja</th>
@@ -159,7 +160,7 @@ class AuctionList extends React.Component {
                               auction.owner.toLowerCase() !== this.props.currentAccount.toLowerCase() &&
                                   (status === 'Activa') &&
                                   <div>
-                                    <input type="text" id={auction.address} required/>
+                                    <input type="number" id={auction.address} required/>
                                     <button onClick={() => this.setBid(auction, auction.address)}>Pujar</button>
                                   </div>
                           }
