@@ -14,7 +14,7 @@ contract Auction{
     uint    public highestBid;
     address public highestBidder;
     mapping(address => uint256) fundsByBidder;
-    bool    ownerHasWithdrawn;
+    bool    public ownerHasWithdrawn;
 
     event LogBid(address bidder, uint bid, address highestBidder, uint highestBid, uint highestBindingBid);
     event LogWithdrawal(address withdrawer, address withdrawalAccount, uint amount);
