@@ -91,6 +91,14 @@ class FormCreateAuction extends React.Component {
         }
 
         this.props.AuctionFactoryContract.methods.createAuction(
+        console.log("Valores nueva Subasta",
+                    {
+                        initialTimeBlock: initialTimeBlock,
+                        endTimeBlock: endTimeBlock,
+                        initialTime: initialTime,
+                        endTime: endTime
+                    });
+
             initialTimeBlock,
             endTimeBlock,
             initialTime,
