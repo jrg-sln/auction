@@ -107,6 +107,7 @@ class Main extends Component {
     const canceled = await auction.methods.canceled().call()
     const highestBid = await auction.methods.highestBid().call()
     const highestBidder = await auction.methods.highestBidder().call()
+    const ownerHasWithdrawn = await auction.methods.ownerHasWithdrawn().call()
     return {
         contract: auction,
         address: auctionAddr,
@@ -119,7 +120,8 @@ class Main extends Component {
         initialPrice: initialPrice.toString(),
         canceled: canceled,
         highestBid: this.props.web3.utils.fromWei(highestBid.toString(), 'ether').toString(),
-        highestBidder: highestBidder
+        highestBidder: highestBidder,
+        ownerHasWithdrawn: ownerHasWithdrawn
     };
   }
 
